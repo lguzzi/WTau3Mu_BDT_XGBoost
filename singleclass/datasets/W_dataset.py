@@ -5,36 +5,9 @@ import seaborn  as sns
 import root_numpy
 
 from sklearn.model_selection    import train_test_split
-from collections                import OrderedDict
 sns.set(style="white")
 
-labels = OrderedDict()
-
-labels['cand_refit_tau_pt'                            ] = '$\\tau$ $p_{T}$'
-labels['cand_refit_mttau'                             ] = '$m_{T}(\\tau, MET)$'
-labels['cand_refit_tau_dBetaIsoCone0p8strength0p2_rel'] = '$\\tau$ iso'
-labels['abs(cand_refit_dPhitauMET)'                   ] = '$\Delta\phi(\\tau MET)$'
-labels['cand_refit_met_pt'                            ] = 'MET $p_{T}$'
-labels['cand_refit_tau_pt/cand_refit_met_pt'          ] = '$\\tau$ $p_{T}$/MET $p_{T}$'     # only for >= v2
-labels['cand_refit_tau_pt*(cand_refit_met_pt**-1)'    ] = '$\\tau$ $p_{T}$/MET $p_{T}$'     # only for >= v2
-labels['cand_refit_dRtauMuonMax'                      ] = 'max($\Delta R(\\tau \mu_{i})$)'
-labels['cand_refit_w_pt'                              ] = 'W $p_{T}$'
-labels['cand_refit_mez_1'                             ] = '$max(ME_z^i)$'
-labels['cand_refit_mez_2'                             ] = '$min(ME_z^i)$'
-labels['abs(mu1_z-mu2_z)'                             ] = '$\Delta z (\mu_1, \mu_2)$'
-labels['abs(mu1_z-mu3_z)'                             ] = '$\Delta z (\mu_1, \mu_3)$'
-labels['abs(mu2_z-mu3_z)'                             ] = '$\Delta z (\mu_2, \mu_3)$'
-labels['tau_sv_ls'                                    ] = 'SV L/$\sigma$'
-labels['tau_sv_prob'                                  ] = 'SV prob'
-labels['log(-log(tau_sv_prob))'                       ] = 'log(-log(SV prob))'
-labels['tau_sv_cos'                                   ] = 'SV cos($\\theta_{IP}$)'
-labels['mu1ID'                                        ] = '$\mu_1$ ID'
-labels['mu2ID'                                        ] = '$\mu_2$ ID'
-labels['mu3ID'                                        ] = '$\mu_3$ ID'
-labels['tauEta'                                       ] = '$|\eta_{\\tau}|$'
-labels['bdt'                                          ] = 'BDT'
-labels['cand_refit_tau_mass'                          ] = '$\\tau$ mass'
-labels['year'                                         ] = 'year'
+from features import features, branches, labels
 
 def gini(actual, pred, cmpcol = 0, sortcol = 1):
     assert( len(actual) == len(pred) )
@@ -54,59 +27,31 @@ def gini_xgb(preds, dtrain):
     gini_score = gini_normalized(labels, preds)
     return 'gini', gini_score
 
-features = [
-    'cand_refit_tau_pt',
-    'cand_refit_mttau',
-    'cand_refit_tau_dBetaIsoCone0p8strength0p2_rel',
-    'abs(cand_refit_dPhitauMET)',
-    'cand_refit_met_pt',
-    'cand_refit_tau_pt*(cand_refit_met_pt**-1)',    # only for >= v4
-#    'cand_refit_tau_pt/cand_refit_met_pt',          # only for >= v2
-#    'cand_refit_dRtauMuonMax',
-    'cand_refit_w_pt',
-    'cand_refit_mez_1',
-    'cand_refit_mez_2',
-    'abs(mu1_z-mu2_z)', 
-    'abs(mu1_z-mu3_z)', 
-    'abs(mu2_z-mu3_z)',
-    'tau_sv_ls',
-    'tau_sv_prob',
-    #'log(-log(tau_sv_prob))',
-    'tau_sv_cos',
-]
-
-core_features = [ff for ff in features] ## import purpose
-
-branches = features + [
-    'cand_refit_charge',
-    'cand_refit_tau_eta',
-    'cand_refit_tau_mass',
-    'cand_refit_mass12',
-    'cand_refit_mass13',
-    'cand_refit_mass23',
-    'cand_charge',
-    'cand_charge12',
-    'cand_charge13',
-    'cand_charge23',
-    'mu1_refit_muonid_soft', 'mu1_refit_muonid_loose', 'mu1_refit_muonid_medium', 'mu1_refit_muonid_tight',
-    'mu2_refit_muonid_soft', 'mu2_refit_muonid_loose', 'mu2_refit_muonid_medium', 'mu2_refit_muonid_tight',
-    'mu3_refit_muonid_soft', 'mu3_refit_muonid_loose', 'mu3_refit_muonid_medium', 'mu3_refit_muonid_tight',
-    'cand_refit_dPhitauMET',
-    'mu1_z', 'mu2_z','mu3_z',
-    #'HLT_Tau3Mu_Mu5_Mu1_TkMu1_IsoTau10_Charge1_matched',
-    #'HLT_Tau3Mu_Mu7_Mu1_TkMu1_IsoTau15_matched',
-]
-
-sig_selection = '(  cand_refit_tau_mass > 1.6 & cand_refit_tau_mass < 2.0                                                               & abs(cand_refit_charge)==1)'
-bkg_selection = '(((cand_refit_tau_mass > 1.6 & cand_refit_tau_mass < 1.72) | (cand_refit_tau_mass > 1.84 & cand_refit_tau_mass < 2.0)) & abs(cand_refit_charge)==1)'
+#sig_selection = '(  cand_refit_tau_mass > 1.6 & cand_refit_tau_mass < 2.0                                                               & abs(cand_refit_charge)==1)'
+#bkg_selection = '(((cand_refit_tau_mass > 1.6 & cand_refit_tau_mass < 1.72) | (cand_refit_tau_mass > 1.84 & cand_refit_tau_mass < 2.0)) & abs(cand_refit_charge)==1)'
 
 signal_W_2017     = [
-    #'/gwpool/users/lguzzi/Tau3Mu/2017_2018/ntuple/MC2017_aug2/WToTauTo3Mu/WTau3MuTreeProducer/tree.root',   ## Pythia 2017
-    '/gwpool/users/lguzzi/Tau3Mu/2017_2018/ntuple/MC2017_MadGraph/WToTauTo3Mu/WTau3MuTreeProducer/tree.root',     ## MadGraph 2017
+    '/gwpool/users/lguzzi/Tau3Mu/2017_2018/ntuple/MC2017_Pythia/WToTauTo3Mu/WTau3MuTreeProducer/tree.root',   ## Pythia 2017
+    #'/gwpool/users/lguzzi/Tau3Mu/2017_2018/ntuple/MC2017_MadGraph/WToTauTo3Mu/WTau3MuTreeProducer/tree.root',     ## MadGraph 2017
 ]
 signal_W_2018 = [
-    #'/gwpool/users/lguzzi/Tau3Mu/2017_2018/ntuple/MC2018_Pythia/WToTauTo3Mu/WTau3MuTreeProducer/tree.root',     ## Pythia 2018
-    '/gwpool/users/lguzzi/Tau3Mu/2017_2018/ntuple/MC2018_MadGraph/WToTauTo3Mu/WTau3MuTreeProducer/tree.root',   ## MadGraph 2018
+    '/gwpool/users/lguzzi/Tau3Mu/2017_2018/ntuple/MC2018_Pythia/WToTauTo3Mu/WTau3MuTreeProducer/tree.root',     ## Pythia 2018
+    #'/gwpool/users/lguzzi/Tau3Mu/2017_2018/ntuple/MC2018_MadGraph/WToTauTo3Mu/WTau3MuTreeProducer/tree.root',   ## MadGraph 2018
+]
+
+shifted_W_2017 = [
+    '/gwpool/users/lguzzi/Tau3Mu/2017_2018/ntuple/MC2017_Pythia_shiftedMasses/WToTauTo3Mu_1p65/WTau3MuTreeProducer/tree.root',
+    '/gwpool/users/lguzzi/Tau3Mu/2017_2018/ntuple/MC2017_Pythia_shiftedMasses/WToTauTo3Mu_1p70/WTau3MuTreeProducer/tree.root',
+    '/gwpool/users/lguzzi/Tau3Mu/2017_2018/ntuple/MC2017_Pythia_shiftedMasses/WToTauTo3Mu_1p85/WTau3MuTreeProducer/tree.root',
+    '/gwpool/users/lguzzi/Tau3Mu/2017_2018/ntuple/MC2017_Pythia_shiftedMasses/WToTauTo3Mu_1p90/WTau3MuTreeProducer/tree.root',
+    '/gwpool/users/lguzzi/Tau3Mu/2017_2018/ntuple/MC2017_Pythia_shiftedMasses/WToTauTo3Mu_1p95/WTau3MuTreeProducer/tree.root',
+]
+shifted_W_2018 = [
+    '/gwpool/users/lguzzi/Tau3Mu/2017_2018/ntuple/MC2018_Pythia_shiftedMasses/WToTauTo3Mu_1p65/WTau3MuTreeProducer/tree.root',
+    '/gwpool/users/lguzzi/Tau3Mu/2017_2018/ntuple/MC2018_Pythia_shiftedMasses/WToTauTo3Mu_1p70/WTau3MuTreeProducer/tree.root',
+    '/gwpool/users/lguzzi/Tau3Mu/2017_2018/ntuple/MC2018_Pythia_shiftedMasses/WToTauTo3Mu_1p85/WTau3MuTreeProducer/tree.root',
+    '/gwpool/users/lguzzi/Tau3Mu/2017_2018/ntuple/MC2018_Pythia_shiftedMasses/WToTauTo3Mu_1p90/WTau3MuTreeProducer/tree.root',
+    '/gwpool/users/lguzzi/Tau3Mu/2017_2018/ntuple/MC2018_Pythia_shiftedMasses/WToTauTo3Mu_1p95/WTau3MuTreeProducer/tree.root',
 ]
 
 backgrounds_2017 = [
@@ -122,23 +67,48 @@ backgrounds_2018 = [
     '/gwpool/users/lguzzi/Tau3Mu/2017_2018/ntuple/data2018_PromptReco/DoubleMuonLowMass_Run2018D_PromptReco/WTau3MuTreeProducer/tree.root',    ## 2018D
 ]
 
-sigW_2017 = pd.DataFrame( root_numpy.root2array(signal_W_2017   , 'tree', branches  = branches + ['weight'], selection = sig_selection) )
-sigW_2018 = pd.DataFrame( root_numpy.root2array(signal_W_2018   , 'tree', branches  = branches + ['weight'], selection = sig_selection) )
-bkg_2017  = pd.DataFrame( root_numpy.root2array(backgrounds_2017, 'tree', branches  = branches + ['weight'], selection = bkg_selection) )
-bkg_2018  = pd.DataFrame( root_numpy.root2array(backgrounds_2018, 'tree', branches  = branches + ['weight'], selection = bkg_selection) )
+import ROOT
+tree = ROOT.TChain("tree")
+for ff in backgrounds_2017+backgrounds_2018: tree.Add(ff)
+branches += [bb.GetName() for bb in tree.GetListOfBranches()]
+branches = list(set(branches))
+branches = [bb for bb in branches if bb != 'weight']
+
+sigW_2017 = pd.DataFrame( root_numpy.root2array(signal_W_2017   , 'tree', branches  = branches + ['weight']))#, selection = sig_selection) )
+sigW_2018 = pd.DataFrame( root_numpy.root2array(signal_W_2018   , 'tree', branches  = branches + ['weight']))#, selection = sig_selection) )
+shiW_2017 = pd.DataFrame( root_numpy.root2array(shifted_W_2017  , 'tree', branches  = branches + ['weight']))#, selection = sig_selection) )
+shiW_2018 = pd.DataFrame( root_numpy.root2array(shifted_W_2018  , 'tree', branches  = branches + ['weight']))#, selection = sig_selection) )
+bkg_2017  = pd.DataFrame( root_numpy.root2array(backgrounds_2017, 'tree', branches  = branches + ['weight']))#, selection = bkg_selection) )
+bkg_2018  = pd.DataFrame( root_numpy.root2array(backgrounds_2018, 'tree', branches  = branches + ['weight']))#, selection = bkg_selection) )
 
 features.append('year')
 sigW_2017['year'] = np.full(sigW_2017.shape[0], 2017)
 sigW_2018['year'] = np.full(sigW_2018.shape[0], 2018)
+shiW_2017['year'] = np.full(shiW_2017.shape[0], 2017)
+shiW_2018['year'] = np.full(shiW_2018.shape[0], 2018)
 bkg_2017 ['year'] = np.full(bkg_2017.shape [0], 2017)
 bkg_2018 ['year'] = np.full(bkg_2018.shape [0], 2018)
 
-sigW = pd.concat([sigW_2017, sigW_2018], ignore_index = True)
-bkg  = pd.concat([bkg_2017 , bkg_2018 ], ignore_index = True)
+branches.append('shifted')
+sigW_2017['shifted'] = np.full(sigW_2017.shape[0], 0)
+sigW_2018['shifted'] = np.full(sigW_2018.shape[0], 0)
+shiW_2017['shifted'] = np.full(shiW_2017.shape[0], 1)
+shiW_2018['shifted'] = np.full(shiW_2018.shape[0], 1)
+bkg_2017 ['shifted'] = np.full(bkg_2017.shape [0], 0)
+bkg_2018 ['shifted'] = np.full(bkg_2018.shape [0], 0)
+
+sigW = pd.concat([sigW_2017, sigW_2018, shiW_2017, shiW_2018]   , ignore_index = True)
+#sigW = pd.concat([sigW_2017, sigW_2018]   , ignore_index = True)
+bkg  = pd.concat([bkg_2017 , bkg_2018 ]                         , ignore_index = True)
 
 NEV = -1
 if NEV > 0:    
     print '!'* 20, 'WARNING: using only', NEV, 'events per class', '!'*20, '\n'
+
+    ## shuffle
+    sigW = sigW.sample(frac=1).reset_index(drop=True)
+    bkg  = bkg .sample(frac=1).reset_index(drop=True)
+    
     sigW = sigW[:NEV]
     bkg  = bkg [:NEV]
 
@@ -149,7 +119,8 @@ bkg ['target'] =  np.zeros(bkg. shape[0]).astype(np.int)
 sigW_integral = np.sum(sigW['weight'])
 bkg_integral  = np.sum(bkg ['weight'])
 
-bins = np.linspace(1.6, 2, 40)
+## NOTE: set the number of bin edges -1 and not the number of bins (i.e. 41 edges for 40 bins)
+bins = np.linspace(1.6, 2, 41)
 
 sigW_mass_sum_weight = []
 bkg_mass_sum_weight  = []
@@ -170,21 +141,21 @@ def massWeighterSigW(mass):
     return sigW_mass_weights[bin_low]
 
 @np.vectorize
-def massWeighterSigD(mass):
-    bin_low = np.max(np.where(mass>=bins))
-    return sigD_mass_weights[bin_low]
-
-@np.vectorize
 def massWeighterBkg(mass):
     bin_low = np.max(np.where(mass>=bins))
     return bkg_mass_weights[bin_low]
-    
+
+## mcweight will be used in combine
+sigW['mcweight'] = sigW['weight']
+bkg ['mcweight'] = np.ones(bkg.shape[0]).astype(np.int)
+
+## weight will be used by XGBoost
 sigW['weight'] /= massWeighterSigW(sigW['cand_refit_tau_mass'])
 bkg ['weight'] /= massWeighterBkg (bkg ['cand_refit_tau_mass'])
 
 # further weight adjustment
-#sigW['weight'] *= 1.
-#bkg ['weight'] *= 1. * len(bkg) / len(sigW)
+sigW['weight'] *= 1.
+bkg ['weight'] *= 1. * len(sigW) / len(bkg)
 
 ##########################################################################################
 #####   COMPACTIFY AND ADD THE (POG) MUON ID TO THE SAMPLES
@@ -225,7 +196,6 @@ for dd in [bkg, sigW]:
     dd['abs(mu2_z-mu3_z)'                         ] = abs(dd['mu2_z']-dd['mu3_z'])             
     dd['cand_refit_tau_pt*(cand_refit_met_pt**-1)'] = dd['cand_refit_tau_pt']/dd['cand_refit_met_pt']                  
     #dd['cand_refit_tau_pt/cand_refit_met_pt'      ] = dd['cand_refit_tau_pt']/dd['cand_refit_met_pt']
-    dd['mcweight'                                 ] = dd['weight']*90480./2.e6*(8580+11370)*0.1138/0.1063*1E-7
     
 ##########################################################################################
 #####   ETA BINS
@@ -246,11 +216,15 @@ sigW['tauEta'] = tauEta(sigW['cand_refit_tau_eta'])
 bkg ['tauEta'] = tauEta(bkg ['cand_refit_tau_eta'])
 
 ##########################################################################################
-data = pd.concat([sigW, bkg], ignore_index = True)
+data = pd.concat([sigW, bkg], ignore_index = True, sort=True)
 #data['id'] = np.arange(len(data))
 train, test = train_test_split(data, test_size=0.4, random_state=1986)
 ## assign an id to the test and train sets seprately to avoid mismatch when folding
 train.insert(len(train.columns), 'id', np.arange(len(train)))
 test .insert(len(test .columns), 'id', np.arange(len(test )))
 
+if __name__ == '__main__':
+    print "[INFO] Interactive mode: saving dataset to disk"
+    import root_pandas
+    root_pandas.to_root(data, 'dataframe.root', key='tree')
 

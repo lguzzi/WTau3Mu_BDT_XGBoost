@@ -6,6 +6,12 @@ from sklearn.model_selection    import train_test_split
 
 ordinal = lambda n: "%d%s" % (n,"tsnrhtdd"[(n/10%10!=1)*(n%10<4)*n%10::4])
 
+def add_bdt_score_pck(pck_path, sample, features, label = 'bdt'):
+    from sklearn.externals  import joblib
+    classifiers = joblib.load(pck_path)
+    for jj, clf in enumerate(classifiers):
+        add_bdt_score(classifier = clf, sample = sample, features =features, index = jj, scale = len(classifiers), label = label)
+
 def add_bdt_score(classifier, sample, features, index = 0, scale = 1., label = 'bdt'):
     if not hasattr(sample, label):
         sample.insert(len(sample.columns), label, np.zeros(sample.id.shape))
@@ -19,14 +25,14 @@ def start_XGBoost_trainer(  train,
                             tag  ,
                             features,
                             ## HYPERPARAMETERS
-                                max_depth               = 3     ,
+                                max_depth               = 5     ,
                                 learning_rate           = 0.05  ,
                                 n_estimators            = 10000 ,
                                 subsample               = 0.7   ,
                                 colsample_bytree        = 0.7   ,
                                 min_child_weight        = 10    ,
                                 gamma                   = 5     ,
-                                reg_alpha               = 0.0   ,
+                                reg_alpha               = 0.3   ,
                                 reg_lambda              = 5     ,
                                 kfold                   = 5     ,
                                 early_stopping_rounds   = 10    ,
@@ -58,10 +64,10 @@ def start_XGBoost_trainer(  train,
             reg_alpha       = reg_alpha         ,
             reg_lambda      = reg_lambda        ,
             n_jobs          = 60                ,
-            #nthread         = 60                ,
+            nthread         = -1                ,
             #tree_method     = 'gpu_exact'       ,
         )
-
+        
         clf.fit(    X_train, y_train, 
             eval_set                = [(X_train, y_train), (X_valid, y_valid)]  ,
             early_stopping_rounds   = early_stopping_rounds                     ,

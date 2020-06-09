@@ -44,7 +44,7 @@ def plot_overtraining(train, test, score = 'score', target = 1, title = '', file
         plt.savefig(filename)
         plt.clf()
 
-def plot_ROC(y, score, color = 'm', title = '', filename = 'roc.pdf', label = '', xlab = '', ylab = '', save_file = True, lower_edge = 1.e-5, alpha = 1):
+def plot_ROC(y, score, color = 'm', title = '', filename = 'roc.pdf', label = '', xlab = '', ylab = '', save_file = False, lower_edge = 1.e-5, alpha = 1):
         fpr, tpr, wps = roc_curve(y, score) 
         
         plt.xscale('log')
@@ -62,8 +62,8 @@ def plot_ROC(y, score, color = 'm', title = '', filename = 'roc.pdf', label = ''
         plt.legend(loc='lower right')
         
         if save_file: 
-                plt.savefig(filename)
-                plt.clf()
+            plt.savefig(filename)
+            plt.clf()
 
 def plot_features(classifiers, labels, filename = 'f_score.pdf'):
     if isinstance(classifiers, list):
