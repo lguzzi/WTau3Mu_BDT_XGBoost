@@ -27,8 +27,8 @@ def gini_xgb(preds, dtrain):
     gini_score = gini_normalized(labels, preds)
     return 'gini', gini_score
 
-#sig_selection = '(  cand_refit_tau_mass > 1.6 & cand_refit_tau_mass < 2.0                                                               & abs(cand_refit_charge)==1)'
-#bkg_selection = '(((cand_refit_tau_mass > 1.6 & cand_refit_tau_mass < 1.72) | (cand_refit_tau_mass > 1.84 & cand_refit_tau_mass < 2.0)) & abs(cand_refit_charge)==1)'
+sig_selection = '(  cand_refit_tau_mass > 1.6 & cand_refit_tau_mass < 2.0                                                               & abs(cand_refit_charge)==1)'
+bkg_selection = '(((cand_refit_tau_mass > 1.6 & cand_refit_tau_mass < 1.72) | (cand_refit_tau_mass > 1.84 & cand_refit_tau_mass < 2.0)) & abs(cand_refit_charge)==1)'
 
 signal_W_2017     = [
     '/gwpool/users/lguzzi/Tau3Mu/2017_2018/ntuple/MC2017_Pythia/WToTauTo3Mu/WTau3MuTreeProducer/tree.root',   ## Pythia 2017
@@ -67,19 +67,12 @@ backgrounds_2018 = [
     '/gwpool/users/lguzzi/Tau3Mu/2017_2018/ntuple/data2018_PromptReco/DoubleMuonLowMass_Run2018D_PromptReco/WTau3MuTreeProducer/tree.root',    ## 2018D
 ]
 
-import ROOT
-tree = ROOT.TChain("tree")
-for ff in backgrounds_2017+backgrounds_2018: tree.Add(ff)
-branches += [bb.GetName() for bb in tree.GetListOfBranches()]
-branches = list(set(branches))
-branches = [bb for bb in branches if bb != 'weight']
-
-sigW_2017 = pd.DataFrame( root_numpy.root2array(signal_W_2017   , 'tree', branches  = branches + ['weight']))#, selection = sig_selection) )
-sigW_2018 = pd.DataFrame( root_numpy.root2array(signal_W_2018   , 'tree', branches  = branches + ['weight']))#, selection = sig_selection) )
-shiW_2017 = pd.DataFrame( root_numpy.root2array(shifted_W_2017  , 'tree', branches  = branches + ['weight']))#, selection = sig_selection) )
-shiW_2018 = pd.DataFrame( root_numpy.root2array(shifted_W_2018  , 'tree', branches  = branches + ['weight']))#, selection = sig_selection) )
-bkg_2017  = pd.DataFrame( root_numpy.root2array(backgrounds_2017, 'tree', branches  = branches + ['weight']))#, selection = bkg_selection) )
-bkg_2018  = pd.DataFrame( root_numpy.root2array(backgrounds_2018, 'tree', branches  = branches + ['weight']))#, selection = bkg_selection) )
+sigW_2017 = pd.DataFrame( root_numpy.root2array(signal_W_2017   , 'tree', branches  = branches + ['weight'], selection = sig_selection))
+sigW_2018 = pd.DataFrame( root_numpy.root2array(signal_W_2018   , 'tree', branches  = branches + ['weight'], selection = sig_selection))
+shiW_2017 = pd.DataFrame( root_numpy.root2array(shifted_W_2017  , 'tree', branches  = branches + ['weight'], selection = sig_selection))
+shiW_2018 = pd.DataFrame( root_numpy.root2array(shifted_W_2018  , 'tree', branches  = branches + ['weight'], selection = sig_selection))
+bkg_2017  = pd.DataFrame( root_numpy.root2array(backgrounds_2017, 'tree', branches  = branches + ['weight'], selection = bkg_selection))
+bkg_2018  = pd.DataFrame( root_numpy.root2array(backgrounds_2018, 'tree', branches  = branches + ['weight'], selection = bkg_selection))
 
 features.append('year')
 sigW_2017['year'] = np.full(sigW_2017.shape[0], 2017)
@@ -120,7 +113,7 @@ sigW_integral = np.sum(sigW['weight'])
 bkg_integral  = np.sum(bkg ['weight'])
 
 ## NOTE: set the number of bin edges -1 and not the number of bins (i.e. 41 edges for 40 bins)
-bins = np.linspace(1.6, 2, 41)
+bins = np.linspace(1.6, 2.0, 41)
 
 sigW_mass_sum_weight = []
 bkg_mass_sum_weight  = []
@@ -150,8 +143,8 @@ sigW['mcweight'] = sigW['weight']
 bkg ['mcweight'] = np.ones(bkg.shape[0]).astype(np.int)
 
 ## weight will be used by XGBoost
-sigW['weight'] /= massWeighterSigW(sigW['cand_refit_tau_mass'])
-bkg ['weight'] /= massWeighterBkg (bkg ['cand_refit_tau_mass'])
+sigW['weight'] *= 1. / massWeighterSigW(sigW['cand_refit_tau_mass'])
+bkg ['weight'] *= 1. / massWeighterBkg (bkg ['cand_refit_tau_mass'])
 
 # further weight adjustment
 sigW['weight'] *= 1.
