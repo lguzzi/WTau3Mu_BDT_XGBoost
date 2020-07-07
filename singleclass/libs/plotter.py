@@ -74,7 +74,7 @@ def plot_features(classifiers, labels, filename = 'f_score.pdf'):
             partial   = clf.get_booster().get_fscore()
             parsplit  = sum(partial.values())
 
-            for kk in fscore.keys(): fscore[kk] += partial[kk] * totsplit / parsplit if hasattr(partial, kk) else 0
+            for kk in fscore.keys(): fscore[kk] += 1. * partial[kk] * totsplit / parsplit if kk in partial.keys() else 0
     else:
         fscore = classifiers.get_booster().get_fscore()
 
