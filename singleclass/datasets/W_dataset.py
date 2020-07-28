@@ -27,8 +27,18 @@ def gini_xgb(preds, dtrain):
     gini_score = gini_normalized(labels, preds)
     return 'gini', gini_score
 
-sig_selection = '(  cand_refit_tau_mass > 1.6 & cand_refit_tau_mass < 2.0                                                               & abs(cand_refit_charge)==1)'
-bkg_selection = '(((cand_refit_tau_mass > 1.6 & cand_refit_tau_mass < 1.72) | (cand_refit_tau_mass > 1.84 & cand_refit_tau_mass < 2.0)) & abs(cand_refit_charge)==1)'
+category = '( (sqrt(cand_refit_tau_massE) / cand_refit_tau_mass) > 0.007 & (sqrt(cand_refit_tau_massE) / cand_refit_tau_mass) < 0.012 )'
+sig_selection = ' & '.join([
+    "( abs(cand_refit_tau_mass - 1.8) < 0.2 )",
+    "( abs(cand_refit_charge) == 1 )",
+    category,
+])
+bkg_selection = ' & '.join([
+    "( abs(cand_refit_tau_mass - 1.8) < 0.2 )",
+    "( abs(cand_refit_charge) == 1 )",
+    "( abs(cand_refit_tau_mass - 1.78) > 0.06 )",
+    category,
+])
 
 signal_W_2017     = [
     '/gwpool/users/lguzzi/Tau3Mu/2017_2018/ntuple/MC2017_Pythia/WToTauTo3Mu/WTau3MuTreeProducer/tree.root',   ## Pythia 2017
@@ -211,10 +221,15 @@ bkg ['tauEta'] = tauEta(bkg ['cand_refit_tau_eta'])
 ##########################################################################################
 data = pd.concat([sigW, bkg], ignore_index = True, sort=True)
 #data['id'] = np.arange(len(data))
-train, test = train_test_split(data, test_size=0.4, random_state=1986)
+train, test  = train_test_split(data ,  test_size = 0.4, random_state=1986)
+train, valid = train_test_split(train,  test_size = 0.2, random_state=1986)
+
+#train, valid = train_test_split(train,  test_size = 0.1, random_state=1986)
 ## assign an id to the test and train sets seprately to avoid mismatch when folding
-train.insert(len(train.columns), 'id', np.arange(len(train)))
-test .insert(len(test .columns), 'id', np.arange(len(test )))
+#train.insert(len(train.columns), 'id', np.arange(len(train)))
+#test .insert(len(test .columns), 'id', np.arange(len(test )))
+#valid.insert(len(valid.columns), 'id', np.arange(len(valid)))
+#import pdb; pdb.set_trace()
 
 if __name__ == '__main__':
     print "[INFO] Interactive mode: saving dataset to disk"

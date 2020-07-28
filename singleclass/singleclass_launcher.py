@@ -15,7 +15,7 @@ from sklearn            import preprocessing
 from sklearn.externals  import joblib
 
 sys.path.append('/gwpool/users/lguzzi/Tau3Mu/2017_2018/BDT/singleclass/datasets')
-from W_dataset  import train, test
+from W_dataset  import train, test, valid
 from features   import features, labels
 
 sys.path.append('/gwpool/users/lguzzi/Tau3Mu/2017_2018/BDT/singleclass/libs'    )
@@ -51,7 +51,7 @@ hyperpars = {
 if args.load is None:
     classifiers = start_XGBoost_trainer(
         train       = train     ,
-        test        = test      ,
+        valid       = valid     ,
         tag         = tag       ,
         features    = features  ,   
         **hyperpars
