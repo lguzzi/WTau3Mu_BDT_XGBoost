@@ -9,6 +9,8 @@ import numpy            as np
 import pandas           as pd
 import matplotlib.cm    as cm
 
+import json
+
 from sklearn            import preprocessing
 from sklearn.externals  import joblib
 
@@ -18,7 +20,7 @@ from features   import features, labels
 
 sys.path.append('/gwpool/users/lguzzi/Tau3Mu/2017_2018/BDT/singleclass/libs'    )
 from trainer    import start_XGBoost_trainer, add_bdt_score
-from plotter    import plot_overtraining, plot_ROC, plot_correlation_matrix, plot_features
+from plotter    import plot_overtraining, plot_ROC, plot_correlation_matrix, plot_features, plot_efficiency_vs_taumass
 
 
 parser = argparse.ArgumentParser('XGBoost training script')
@@ -84,10 +86,15 @@ plot_overtraining(  train  = train,
 plot_correlation_matrix( sample = pd.concat([train, test]), features = features + ['bdt', 'cand_refit_tau_mass'], labels = labels, label = '', filename = './pdf/%s/corr_mat_bkg.pdf' %tag)
 plot_features(classifiers = classifiers, labels = labels, filename = './pdf/%s/f_score.pdf' %tag)
 
+plot_efficiency_vs_taumass(sample = test[test.target == 1], cut = 0.996, filename = './pdf/%s/efficiency_vs_mass.pdf' %tag) 
+
 ## save the enriched ntuples
 if args.save_tree:
-    sigW = pd.concat([train[(train.target == 1) & (train.shifted == 0)], test[(test.target == 1) & (test.shifted == 0)]])
-    bkg  = pd.concat([train[(train.target == 0) & (train.shifted == 0)], test[(test.target == 0) & (test.shifted == 0)]])
+    #sigW = pd.concat([train[(train.target == 1) & (train.shifted == 0)], test[(test.target == 1) & (test.shifted == 0)]])
+    #bkg  = pd.concat([train[(train.target == 0) & (train.shifted == 0)], test[(test.target == 0) & (test.shifted == 0)]])
+
+    sigW = pd.concat([train[(train.target == 1)], test[(test.target == 1)]])
+    bkg  = pd.concat([train[(train.target == 0)], test[(test.target == 0)]])
 
     if not os.path.exists('./ntuples'): os.mkdir('./ntuples')
 
@@ -96,5 +103,8 @@ if args.save_tree:
 
     sigW.to_root('./ntuples/signal_{TAG}.root'    .format(TAG = tag), key = 'tree')
     bkg .to_root('./ntuples/background_{TAG}.root'.format(TAG = tag), key = 'tree')
+
+## save the BDT config
+json.dump(hyperpars, open('pdf/%s/hyperpars.json' %tag, 'w'), indent = True) 
 
 print 'all done'

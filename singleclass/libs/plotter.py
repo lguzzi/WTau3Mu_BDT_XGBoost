@@ -4,6 +4,7 @@ import pandas   as pd
 import seaborn  as sb ; sb.set(style="white")
 import matplotlib
 import matplotlib.pyplot as plt
+import ROOT
 
 from xgboost            import plot_importance
 from collections        import OrderedDict
@@ -110,3 +111,39 @@ def plot_correlation_matrix(sample, features, labels, label = '', filename = 'co
     plt.tight_layout()
     plt.savefig(filename)
     plt.clf()
+
+def plot_efficiency_vs_taumass(sample, cut, bins = np.linspace(1.6, 2.0, 41), save_file = True, filename = 'efficiency_vs_mass.pdf'):
+    eff = ROOT.TEfficiency("eff", "", len(bins) - 1, bins) 
+
+    fig, ax1 = plt.subplots()
+
+    ax1.set_xlabel("3mu mass [GeV]")
+    ax1.set_ylabel("MC entries (a.u.)")
+    ax1.yaxis.label.set_color('b')
+    ax2 = ax1.twinx()
+    ax2.set_ylabel("BDT efficiency")
+    ax2.yaxis.label.set_color('r')
+
+    for ii in range(len(bins) - 1): 
+        total   = sample[(sample.cand_refit_tau_mass > bins[ii]) & (sample.cand_refit_tau_mass <= bins[ii+1])].shape[0]
+        passing = sample[(sample.cand_refit_tau_mass > bins[ii]) & (sample.cand_refit_tau_mass <= bins[ii+1]) & (sample.bdt > cut)].shape[0]
+
+        eff.SetTotalEvents(ii+1, total)
+        eff.SetPassedEvents(ii+1, passing)
+
+    sb.distplot(sample.cand_refit_tau_mass, bins=bins, kde=False, rug=False, norm_hist=True, hist_kws={"alpha": 0.5, "color": 'b'}, label='MC sample', ax = ax1)
+    y_val = [eff.GetEfficiency(ii)          for ii in range(len(bins) - 1)]
+    x_val = (bins[1:] + bins[:-1]) / 2.
+    y_eup = [eff.GetEfficiencyErrorUp(ii)   for ii in range(len(bins) - 1)]
+    y_elo = [eff.GetEfficiencyErrorLow(ii)  for ii in range(len(bins) - 1)]
+
+    ax2.set_ylim(0, 1.5 * max(y_val))
+
+    ax2.errorbar(x_val, y_val, yerr = [y_elo, y_eup], fmt = '.', c = 'r', label = 'BDT > %s' %cut)
+    plt.title("BDT efficiency VS. three-muon mass")
+    fig.tight_layout()
+
+    if save_file:
+        plt.legend(loc='upper right')
+        fig.savefig(filename)
+        plt.clf()
